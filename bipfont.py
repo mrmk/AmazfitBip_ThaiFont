@@ -81,7 +81,7 @@ def packFont(font_path):
 	bmp_files = sorted(glob.glob('bmp' +  os.sep + '*'))
 
 	for i in range (0, len(bmp_files)):
-		margin_top = int(bmp_files[i][8])
+		margin = bmp_files[i][8]
 		
 		if(i == 0):
 			unicode = int(bmp_files[i][4:-5],16)
@@ -118,7 +118,11 @@ def packFont(font_path):
 						x = 0
 						y += 1
 				bmps.extend(b.to_bytes(1, 'big'))
-			char_width = char_width * 16 + margin_top;
+			if margin == 'a':
+				char_width = int(math.ceil(char_width / 2) * 16) + 0;
+			else:
+				char_width = char_width * 16 + int(margin);
+			print('file='+ bmp_files[i] +' char_width=' + str(char_width))
 			bmps.extend(char_width.to_bytes(1, 'big'))
 			
 			if (unicode+1 != next_unicode):
@@ -144,12 +148,42 @@ def packFont(font_path):
 	font_file.write(header)	
 	font_file.write(bmps)		
 
+def shiftFont(bmp_path):
+	print('Fixing', bmp_path)
+	bmp_files = sorted(glob.glob(bmp_path +  os.sep + '*'))
+	for f in range (0, len(bmp_files)):
+		img = Image.open(bmp_files[f])
+		pixels = img.load()
+		start = 0
+		found = False
+		for i in range (0, 16):
+			j = 0
+			while j < 16:
+				if pixels[i,j] == 0:
+					start = i
+					found = True
+					break
+				j+=1
+			if found:
+				break
+		print('start='+ str(start))
+		img_new = Image.new('1', (16, 16), 0)
+		new_pixels = img_new.load()
+		for i in range (start, 16):
+			for j in range (0, 16):
+				# print('i='+str(i)+',j='+str(j))
+				new_pixels[i-start, j] = 1 - pixels[i,j]
+		img_new.save(bmp_files[f])
+
+
 if len(sys.argv) == 3 and sys.argv[1] == 'unpack':
 	unpackFont(sys.argv[2])
 elif len(sys.argv) == 3 and sys.argv[1] == 'pack':
 	packFont(sys.argv[2])
+elif len(sys.argv) == 3 and sys.argv[1] == 'fix':
+	shiftFont(sys.argv[2])
 else:
 	print('Usage:')
 	print('   python', sys.argv[0], 'unpack Mili_chaohu.ft')
 	print('   python', sys.argv[0], 'pack new_Mili_chaohu.ft')
-
+	print('   python', sys.argv[0], 'fix ./bmp')
