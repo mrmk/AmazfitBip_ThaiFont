@@ -118,11 +118,9 @@ def packFont(font_path):
 						x = 0
 						y += 1
 				bmps.extend(b.to_bytes(1, 'big'))
-			if margin == 'a':
-				char_width = int(math.ceil(char_width / 2) * 16) + 0;
-			else:
-				char_width = char_width * 16 + int(margin);
-			print('file='+ bmp_files[i] +' char_width=' + str(char_width))
+			
+			char_width = char_width * 16 + int(margin);
+			# print('file='+ bmp_files[i] +' char_width=' + str(char_width))
 			bmps.extend(char_width.to_bytes(1, 'big'))
 			
 			if (unicode+1 != next_unicode):
